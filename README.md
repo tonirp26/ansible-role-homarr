@@ -4,9 +4,6 @@ This role installs the Homarr application in Debian.
 
 After running the role, the `homarr` service will be available on the server. The application's web interface can be accessed at `http://{your-container-ip}:7575`.
 
-> [!WARNING]
-> This repository have the variable `SECRET_ENCRYPTION_KEY` this variable must be secret.
-
 ## Requirements
 
 Requires Node 24 or later to be installed on the server (you can use the geerlingguy.nodejs role to install Java if needed).
