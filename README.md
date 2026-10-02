@@ -5,7 +5,7 @@ This role installs the Homarr application in Debian.
 After running the role, the `homarr` service will be available on the server. The application's web interface can be accessed at `http://{your-container-ip}:7575`.
 
 > [!WARNING]
-> This repository have the variable `SECRET_ENCRYPTION_KEY` this variable must be secret so change for a secret one. For this first test it is in plain text.
+> This repository have the variable `SECRET_ENCRYPTION_KEY` this variable must be secret.
 
 ## Requirements
 
@@ -56,6 +56,12 @@ systemd_homarr_template: "homarr.service.j2"
 ```
 
 Template for Homarr systemd service executed by root user.
+
+```j2
+SECRET_ENCRYPTION_KEY={{ homarr_secret_encryption_key }}
+```
+
+This variable is defined inside the homarr.env template, so it is not a task variable. However, it must be set for this role to work. In my case, it is stored in an Ansible Vault file. You can generate your own using openssl rand -hex 32.
 
 ## Dependencies
 
