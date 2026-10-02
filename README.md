@@ -1,38 +1,84 @@
-Role Name
-=========
+# Ansible Role: Homarr
 
-A brief description of the role goes here.
+This role installs the Homarr application in Debian.
 
-Requirements
-------------
+After running the role, the `homarr` service will be available on the server. The application's web interface can be accessed at `http://{your-container-ip}:7575`.
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+> [!WARNING]
+> This repository have the variable `SECRET_ENCRYPTION_KEY` this variable must be secret so change for a secret one. For this first test it is in plain text.
 
-Role Variables
---------------
+## Requirements
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Requires Node 24 or later to be installed on the server (you can use the geerlingguy.nodejs role to install Java if needed).
 
-Dependencies
-------------
+## Role Variables
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Available variables are listed below, along with default values (see `defaults/main.yml`):
 
-Example Playbook
-----------------
+```yaml
+app_repository_url: "https://github.com/homarr-labs/homarr.git"
+```
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+URL used in git clone command.
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```yaml
+app_repository_dir: "/opt/homarr"
+```
 
-License
--------
+Set repository destination path, if modified make sure that system user `homarr` have correct rights.
 
-BSD
+```yaml
+app_version: "v1.77.2"
+```
 
-Author Information
-------------------
+Set desired version of the app.
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+environment_file: "homarr.env.j2"
+```
+
+Template for homarr environment variables and routes.
+
+```yaml
+homarr_template: "homarr.j2"
+```
+
+Homarr wrapper for executing the Homarr CLI with environment variables loaded from /opt/homarr.env.
+
+```yaml
+systemd_redis_template: "redis.service.j2"
+```
+
+Template for Redis systemd service executed by root user.
+
+```yaml
+systemd_homarr_template: "homarr.service.j2" 
+```
+
+Template for Homarr systemd service executed by root user.
+
+## Dependencies
+
+None.
+
+## Example Playbook
+
+```yaml
+- hosts: server
+  vars_files:
+    - vars/main.yml
+  roles:
+    - homarr
+```
+
+*Inside `vars/main.yml`*:
+
+```yaml
+app_version: 1.1.1
+```
+
+## License
+
+## Author Information
+
+This role was created in 2026 by [tonirp](https://github.com/tonirp26).

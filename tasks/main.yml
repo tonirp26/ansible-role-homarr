@@ -17,7 +17,7 @@
     create_home: true
     system: true
 
-- name: Create Homarr installation directory
+- name: Create Homarr installation directory.
   ansible.builtin.file:
     path: "{{ app_repository_dir }}"
     state: directory
@@ -25,13 +25,13 @@
     group: homarr
     mode: 0755
 
-- name: Download Homarr prebuilt release
+- name: Download Homarr prebuilt release.
   ansible.builtin.get_url:
     url: "https://github.com/homarr-labs/homarr/releases/latest/download/build-debian-amd64.tar.gz"
     dest: /tmp/homarr.tar.gz
     mode: 0644
 
-- name: Extract Homarr prebuilt release
+- name: Extract Homarr prebuilt release.
   ansible.builtin.unarchive:
     src: /tmp/homarr.tar.gz
     dest: "{{ app_repository_dir }}"
@@ -39,14 +39,14 @@
     owner: homarr
     group: homarr
 
-- name: Ensure Homarr run script is executable
+- name: Ensure Homarr run script is executable.
   ansible.builtin.file:
     path: "{{ app_repository_dir }}/run.sh"
     owner: homarr
     group: homarr
     mode: 0755
 
-- name: Ensure Homarr database directory exists
+- name: Ensure Homarr database directory exists.
   ansible.builtin.file:
     path: /opt/homarr_db
     state: directory
@@ -54,7 +54,7 @@
     group: homarr
     mode: 0755
 
-- name: Create Homarr environment file
+- name: Create Homarr environment file.
   ansible.builtin.template:
     src: "{{ environment_file }}"
     dest: /opt/homarr.env
@@ -126,7 +126,7 @@
     group: root
     mode: 0755
 
-- name: Copy Redis systemd configuration
+- name: Copy Redis systemd configuration.
   ansible.builtin.template:
     src: "{{ systemd_redis_template }}"
     dest: /etc/systemd/system/redis-server.service.d/override.conf
@@ -161,7 +161,7 @@
     state: started
     enabled: true
 
-- name: Ensure ngix is disabled
+- name: Ensure ngix is disabled.
   ansible.builtin.systemd_service:
     state: stopped
     name: nginx
