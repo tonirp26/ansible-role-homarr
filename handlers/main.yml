@@ -1,0 +1,14 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart redis
+  ansible.builtin.systemd_service:
+    name: redis-server
+    state: restarted
+
+- name: Restart homarr
+  ansible.builtin.systemd_service:
+    name: homarr
+    state: restarted

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -a
+source /opt/homarr.env
+set +a
+
+cd /opt/homarr/apps/cli && node ./cli.cjs "$@"
