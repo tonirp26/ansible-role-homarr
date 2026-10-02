@@ -1,0 +1,14 @@
+[Unit]
+Requires=redis-server.service
+After=redis-server.service
+Description=Homarr Service
+After=network.target
+
+[Service]
+Type=exec
+WorkingDirectory=/opt/homarr
+EnvironmentFile=-/opt/homarr.env
+ExecStart=/opt/homarr/run.sh
+
+[Install]
+WantedBy=multi-user.target

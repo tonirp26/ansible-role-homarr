@@ -1,0 +1,8 @@
+---
+app_repository_url: "https://github.com/homarr-labs/homarr.git"
+app_repository_dir: "/opt/homarr"
+app_version: "v1.77.2"
+environment_file: "homarr.env.j2"
+homarr_template: "homarr.j2"
+systemd_redis_template: "redis.service.j2"
+systemd_homarr_template: "homarr.service.j2" 
