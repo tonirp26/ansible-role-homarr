@@ -17,7 +17,15 @@
     create_home: true
     system: true
 
-- name: Create Homarr installation directory.
+- name: Ensure homarr data directory exists
+  ansible.builtin.file:
+    path: /var/lib/homarr
+    state: directory
+    owner: homarr
+    group: homarr
+    mode: "0775"
+
+- name: Ensure Homarr installation directory is present.
   ansible.builtin.file:
     path: "{{ homarr_repository_dir }}"
     state: directory
@@ -30,7 +38,8 @@
     url: "https://github.com/homarr-labs/homarr/releases/download/v{{ homarr_version }}/build-debian-amd64.tar.gz"
     dest: /tmp/homarr.tar.gz
     mode: "0644"
-    
+  register: homarr_updated
+  notify: Restart homarr
 
 - name: Extract Homarr prebuilt release.
   ansible.builtin.unarchive:
@@ -39,6 +48,7 @@
     remote_src: true
     owner: homarr
     group: homarr
+  when: homarr_updated.changed
 
 - name: Ensure Homarr run script is executable.
   ansible.builtin.file:
@@ -46,6 +56,7 @@
     owner: homarr
     group: homarr
     mode: "0755"
+  when: homarr_updated.changed
 
 - name: Ensure Homarr database directory exists.
   ansible.builtin.file:
@@ -79,6 +90,7 @@
     group: redis
     mode: "0644"
     remote_src: true
+  when: homarr_updated.changed
   notify: Restart redis
 
 - name: Configure Redis bind address.
@@ -87,6 +99,7 @@
     regexp: '^bind 127\.0\.0\.1 -::1$'
     line: 'bind 127.0.0.1 -::1'
     insertafter: EOF
+  when: homarr_updated.changed
   notify: Restart redis
 
 - name: Ensure nginx.conf file is not present.
@@ -150,6 +163,10 @@
     - Reload systemd
     - Restart homarr
 
+- name: Apply pending systemd changes before starting services.
+  ansible.builtin.meta: flush_handlers
+  when: homarr_updated.changed
+
 - name: Ensure redis-server is running and enabled on boot.
   ansible.builtin.systemd_service:
     name: redis-server
@@ -161,6 +178,7 @@
     name: homarr
     state: started
     enabled: true
+  when: homarr_updated.changed
 
 - name: Ensure ngix is disabled.
   ansible.builtin.systemd_service:
