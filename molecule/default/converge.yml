@@ -1,0 +1,17 @@
+---
+- name: Converge
+  hosts: all
+
+  vars:
+    nodejs_install_npm_user: root
+    nodejs_version: "22.x"
+    # test encryption key
+    vault_homarr_secret_encryption_key: 40950657448223f012360d8cb0412f41722a9ee7967585acb29a6fcec506faf3
+
+  pre_tasks:
+    - name: Update apt cache.
+      apt: update_cache=true cache_valid_time=600
+
+  roles:
+    - role: geerlingguy.nodejs
+    - role: ansible-role-homarr

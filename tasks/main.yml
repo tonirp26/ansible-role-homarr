@@ -1,6 +1,6 @@
 ---
 - name: Ensure requiered Homarr dependency is present.
-  apt: 
+  ansible.builtin.apt:
     name:
       - redis-server
       - nginx
@@ -11,40 +11,52 @@
     update_cache: true
 
 - name: Create homarr system user.
-  user:
+  ansible.builtin.user:
     name: homarr
     home: /var/lib/homarr
     create_home: true
     system: true
 
-- name: Create Homarr installation directory.
+- name: Ensure homarr data directory exists
   ansible.builtin.file:
-    path: "{{ app_repository_dir }}"
+    path: /var/lib/homarr
     state: directory
     owner: homarr
     group: homarr
-    mode: 0755
+    mode: "0775"
+
+- name: Ensure Homarr installation directory is present.
+  ansible.builtin.file:
+    path: "{{ homarr_repository_dir }}"
+    state: directory
+    owner: homarr
+    group: homarr
+    mode: "0755"
 
 - name: Download Homarr prebuilt release.
   ansible.builtin.get_url:
-    url: "https://github.com/homarr-labs/homarr/releases/latest/download/build-debian-amd64.tar.gz"
+    url: "https://github.com/homarr-labs/homarr/releases/download/v{{ homarr_version }}/build-debian-amd64.tar.gz"
     dest: /tmp/homarr.tar.gz
-    mode: 0644
+    mode: "0644"
+  register: homarr_updated
+  notify: Restart homarr
 
 - name: Extract Homarr prebuilt release.
   ansible.builtin.unarchive:
     src: /tmp/homarr.tar.gz
-    dest: "{{ app_repository_dir }}"
+    dest: "{{ homarr_repository_dir }}"
     remote_src: true
     owner: homarr
     group: homarr
+  when: homarr_updated.changed
 
 - name: Ensure Homarr run script is executable.
   ansible.builtin.file:
-    path: "{{ app_repository_dir }}/run.sh"
+    path: "{{ homarr_repository_dir }}/run.sh"
     owner: homarr
     group: homarr
-    mode: 0755
+    mode: "0755"
+  when: homarr_updated.changed
 
 - name: Ensure Homarr database directory exists.
   ansible.builtin.file:
@@ -52,7 +64,7 @@
     state: directory
     owner: homarr
     group: homarr
-    mode: 0755
+    mode: "0755"
 
 - name: Create Homarr environment file.
   ansible.builtin.template:
@@ -60,24 +72,25 @@
     dest: /opt/homarr.env
     owner: root
     group: root
-    mode: 0600
+    mode: "0600"
 
 - name: Ensure redis directory is present.
   ansible.builtin.file:
     path: /appdata/redis
     owner: redis
     group: redis
-    mode: 0744
+    mode: "0744"
     state: directory
 
 - name: Copy redis configuration file.
   ansible.builtin.copy:
-    src: "{{ app_repository_dir }}/redis.conf"
+    src: "{{ homarr_repository_dir }}/redis.conf"
     dest: /etc/redis/redis.conf
     owner: redis
     group: redis
-    mode: 0644
-    remote_src: yes
+    mode: "0644"
+    remote_src: true
+  when: homarr_updated.changed
   notify: Restart redis
 
 - name: Configure Redis bind address.
@@ -86,6 +99,7 @@
     regexp: '^bind 127\.0\.0\.1 -::1$'
     line: 'bind 127.0.0.1 -::1'
     insertafter: EOF
+  when: homarr_updated.changed
   notify: Restart redis
 
 - name: Ensure nginx.conf file is not present.
@@ -99,16 +113,16 @@
     state: directory
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
 
 - name: Copy nginx.conf file.
   ansible.builtin.copy:
-    src: "{{ app_repository_dir }}/nginx.conf"
+    src: "{{ homarr_repository_dir }}/nginx.conf"
     dest: /etc/nginx/templates/nginx.conf
     owner: root
     group: root
-    mode: 0644
-    remote_src: yes
+    mode: "0644"
+    remote_src: true
 
 - name: Create Homarr CLI wrapper.
   ansible.builtin.template:
@@ -116,7 +130,7 @@
     dest: /usr/bin/homarr
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
 
 - name: Ensure redis systemd directory is present.
   ansible.builtin.file:
@@ -124,7 +138,7 @@
     state: directory
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
 
 - name: Copy Redis systemd configuration.
   ansible.builtin.template:
@@ -132,7 +146,7 @@
     dest: /etc/systemd/system/redis-server.service.d/override.conf
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - Reload systemd
     - Restart redis
@@ -144,10 +158,14 @@
     dest: "/etc/systemd/system/homarr.service"
     owner: root
     group: root
-    mode: 0644
-  notify: 
-  - Reload systemd
-  - Restart homarr
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart homarr
+
+- name: Apply pending systemd changes before starting services.
+  ansible.builtin.meta: flush_handlers
+  when: homarr_updated.changed
 
 - name: Ensure redis-server is running and enabled on boot.
   ansible.builtin.systemd_service:
@@ -160,6 +178,7 @@
     name: homarr
     state: started
     enabled: true
+  when: homarr_updated.changed
 
 - name: Ensure ngix is disabled.
   ansible.builtin.systemd_service:

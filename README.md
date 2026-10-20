@@ -58,7 +58,7 @@ Template for Homarr systemd service executed by root user.
 SECRET_ENCRYPTION_KEY={{ homarr_secret_encryption_key }}
 ```
 
-This variable is defined inside the homarr.env template, so it is not a task variable. However, it must be set for this role to work. In my case, it is stored in an Ansible Vault file. You can generate your own using openssl rand -hex 32.
+This variable is defined inside the homarr.env template, so it is not a task variable. However, it must be set for this role to work. In my case, it is stored in an Ansible Vault file. You can generate your own using `openssl rand -hex 32`.
 
 ## Dependencies
 
